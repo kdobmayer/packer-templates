@@ -20,6 +20,7 @@ yum install \
         net-tools \
         nfs-utils \
         sudo \
+        tree \
         unzip \
         vim \
         wget
