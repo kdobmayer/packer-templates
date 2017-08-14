@@ -1,0 +1,57 @@
+{
+  "description": "Packer template for CentOS 7.3 Vagrant box",
+  "min_packer_version": "1.0.0",
+  "variables": {
+    "box_tag": "centos7",
+    "cloud_token": "{{env `VAGRANT_CLOUD_TOKEN`}}",
+    "iso_checksum": "27bd866242ee058b7a5754e83d8ee8403e216b93d130d800852a96f41c34d86a",
+    "iso_name": "CentOS-7-x86_64-Minimal-1611.iso",
+    "mirror": "http://mirror.met.hu/centos/7/isos/x86_64",
+    "output_dir": "build"
+  },
+  "builders": [{
+    "type": "qemu",
+    "accelerator": "kvm",
+    "boot_command": ["<tab>", " text ks=http://{{.HTTPIP}}:{{.HTTPPort}}/{{user `box_tag`}}.ks", "<enter>", "<wait>"],
+    "boot_wait": "5s",
+    "disk_compression": true,
+    "disk_interface": "virtio",
+    "disk_size": "10240",
+    "format": "qcow2",
+    "headless": true,
+    "http_directory": "http",
+    "iso_checksum": "{{user `iso_checksum`}}",
+    "iso_checksum_type": "sha256",
+    "iso_url": "{{user `mirror`}}/{{user `iso_name`}}",
+    "net_device": "virtio-net",
+    "output_directory": "{{user `output_dir`}}/{{build_type}}",
+    "qemuargs": [
+      ["-m", "4096M"],
+      ["-cpu", "host"],
+      ["-smp", "cpus=1,maxcpus=8,cores=2"]
+    ],
+    "shutdown_command": "sudo systemctl --no-wall poweroff",
+    "ssh_password": "vagrant",
+    "ssh_port": "22",
+    "ssh_timeout": "20m",
+    "ssh_username": "vagrant"
+  }],
+  "provisioners": [{
+    "type": "shell",
+    "execute_command": "sudo sh -c '{{.Vars}} {{.Path}}'",
+    "scripts": ["scripts/yum.sh", "scripts/sshd.sh", "scripts/console.sh", "scripts/network.sh", "scripts/vagrant.sh", "scripts/minimize.sh"]
+  }],
+  "post-processors": [
+    [{
+      "type": "vagrant",
+      "compression_level": 9,
+      "vagrantfile_template": "vagrantfile.tpl",
+      "output": "{{user `output_dir`}}/{{user `box_tag`}}_{{.Provider}}.box"
+    }, {
+      "type": "vagrant-cloud",
+      "box_tag": "kdobmayer/{{user `box_tag`}}",
+      "access_token": "{{user `cloud_token`}}",
+      "version": "{{isotime \"06.0102.1504\"}}"
+    }]
+  ]
+}

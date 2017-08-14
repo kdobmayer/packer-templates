@@ -1,0 +1,12 @@
+# Cache objects
+packer_cache/
+.vagrant/
+
+/output*/
+
+# For built boxes
+*.box
+
+*.hwm
+*.pwd
+*.pwi
